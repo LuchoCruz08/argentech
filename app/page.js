@@ -1,101 +1,209 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DynamicSelect } from "@/components/DynamicSelect";
+import { provinces } from "@/config/provinces";
+import { industries } from "@/config/industries";
+import { createClient } from "@/lib/supabaseClient";
+import Header from "@/components/Header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ExternalLink } from "lucide-react";
+import Footer from "@/components/Footer";
+
+export default function ProjectsPage() {
+  const [projects, setProjects] = useState([]);
+  const [filteredProjects, setFilteredProjects] = useState([]);
+  const [nameFilter, setNameFilter] = useState("");
+  const [industryFilter, setIndustryFilter] = useState("all");
+  const [provinceFilter, setProvinceFilter] = useState("all");
+  const [founderNameFilter, setFounderNameFilter] = useState("");
+  const [founderProvinceFilter, setFounderProvinceFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    filterProjects();
+  }, [projects, nameFilter, industryFilter, provinceFilter, founderNameFilter, founderProvinceFilter,
+  ]);
+
+  async function fetchProjects() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.from("projects").select(`
+          *,
+          founders (
+            name,
+            province
+          )
+        `);
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      setError("Error al cargar los proyectos");
+      console.error("Error fetching projects:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function filterProjects() {
+    let filtered = projects.filter(
+      (project) =>
+        project.name.toLowerCase().includes(nameFilter.toLowerCase()) &&
+        (industryFilter === "all" || project.industry === industryFilter) &&
+        (provinceFilter === "all" || project.province === provinceFilter) &&
+        (founderNameFilter === "" ||
+          project.founders.some((founder) =>
+            founder.name.toLowerCase().includes(founderNameFilter.toLowerCase())
+          )) &&
+        (founderProvinceFilter === "all" ||
+          project.founders.some(
+            (founder) => founder.province === founderProvinceFilter
+          ))
+    );
+    setFilteredProjects(filtered);
+  }
+
+  if (loading)
+    return <div className="text-center mt-8">Cargando proyectos...</div>;
+  if (error)
+    return <div className="text-center mt-8 text-red-500">{error}</div>;
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="space-y-6 bg-gray-50 min-h-screen">
+      <Header />
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">
+          Proyectos Tecnológicos Argentinos
+        </h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="name-filter">Nombre del Proyecto</Label>
+                <Input
+                  id="name-filter"
+                  placeholder="Filtrar por nombre"
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="industry-filter">Industria</Label>
+                <DynamicSelect
+                  options={industries}
+                  value={industryFilter}
+                  onValueChange={setIndustryFilter}
+                  placeholder="Seleccionar industria"
+                  label="Todas las Industrias"
+                />
+              </div>
+              <div>
+                <Label htmlFor="province-filter">Provincia del Proyecto</Label>
+                <DynamicSelect
+                  options={provinces}
+                  value={provinceFilter}
+                  onValueChange={setProvinceFilter}
+                  placeholder="Seleccionar provincia"
+                  label="Todas las Provincias"
+                />
+              </div>
+              <div>
+                <Label htmlFor="founder-name-filter">Nombre del Fundador</Label>
+                <Input
+                  id="founder-name-filter"
+                  placeholder="Filtrar por nombre del fundador"
+                  value={founderNameFilter}
+                  onChange={(e) => setFounderNameFilter(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="founder-province-filter">
+                  Provincia del Fundador
+                </Label>
+                <DynamicSelect
+                  options={provinces}
+                  value={founderProvinceFilter}
+                  onValueChange={setFounderProvinceFilter}
+                  placeholder="Seleccionar provincia del fundador"
+                  label="Todas las Provincias"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-8">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead colSpan={4} className="text-center bg-blue-50">
+                  Información del Proyecto
+                </TableHead>
+                <TableHead colSpan={2} className="text-center bg-green-50">
+                  Información de los Fundadores
+                </TableHead>
+              </TableRow>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Industria</TableHead>
+                <TableHead>Provincia</TableHead>
+                <TableHead>Fundadores</TableHead>
+                <TableHead>Enlace</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProjects.map((project) => (
+                <TableRow key={project.id}>
+                  <TableCell className="font-medium">{project.name}</TableCell>
+                  <TableCell>{project.description}</TableCell>
+                  <TableCell>{project.industry}</TableCell>
+                  <TableCell>{project.province}</TableCell>
+                  <TableCell>
+                    {project.founders.map((founder, index) => (
+                      <div key={index} className="mb-1">
+                        {founder.name}{" "}
+                        <span className="text-sm text-gray-500">
+                          ({founder.province})
+                        </span>
+                      </div>
+                    ))}
+                  </TableCell>
+                  <TableCell>
+                    {project.project_link && (
+                      <a
+                        href={project.project_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 flex items-center"
+                      >
+                        Visitar <ExternalLink className="ml-1 h-4 w-4" />
+                      </a>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <Footer/>
     </div>
   );
 }
