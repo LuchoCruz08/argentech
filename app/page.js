@@ -12,6 +12,7 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ExternalLink } from "lucide-react";
+import Footer from "@/components/Footer";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
@@ -220,6 +221,7 @@ export default function ProjectsPage() {
           </Table>
         </div>
       </main>
+      <Footer/>
     </div>
   );
 }
