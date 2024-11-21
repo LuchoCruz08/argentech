@@ -12,7 +12,6 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ExternalLink } from "lucide-react";
-import Footer from "@/components/Footer";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
@@ -33,7 +32,13 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     filterProjects();
-  }, [projects, nameFilter, industryFilter, provinceFilter, founderNameFilter, founderProvinceFilter,
+  }, [
+    projects,
+    nameFilter,
+    industryFilter,
+    provinceFilter,
+    founderNameFilter,
+    founderProvinceFilter,
   ]);
 
   async function fetchProjects() {
@@ -43,7 +48,8 @@ export default function ProjectsPage() {
           *,
           founders (
             name,
-            province
+            province,
+            contact
           )
         `);
 
@@ -178,7 +184,18 @@ export default function ProjectsPage() {
                   <TableCell>
                     {project.founders.map((founder, index) => (
                       <div key={index} className="mb-1">
-                        {founder.name}{" "}
+                        {founder.contact ? (
+                          <a
+                            href={founder.contact}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            {founder.name}
+                          </a>
+                        ) : (
+                          founder.name
+                        )}{" "}
                         <span className="text-sm text-gray-500">
                           ({founder.province})
                         </span>
@@ -203,7 +220,6 @@ export default function ProjectsPage() {
           </Table>
         </div>
       </main>
-      <Footer/>
     </div>
   );
 }

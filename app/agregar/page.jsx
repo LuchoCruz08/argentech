@@ -107,7 +107,7 @@ export default function AddProjectPage() {
           <CardTitle>Agregar Nuevo Proyecto</CardTitle>
           <CardDescription>
             Ingrese los detalles del nuevo proyecto tecnológico y sus
-            fundadores.
+            fundadores. Los campos marcados con * son obligatorios.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -118,12 +118,15 @@ export default function AddProjectPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nombre del Proyecto</Label>
+                  <Label htmlFor="name">
+                    Nombre del Proyecto <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="name"
                     name="name"
                     value={project.name}
                     onChange={handleProjectChange}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -139,7 +142,9 @@ export default function AddProjectPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="province">Provincia</Label>
+                  <Label htmlFor="province">
+                    Provincia <span className="text-red-500">*</span>
+                  </Label>
                   <DynamicSelect
                     options={provinces}
                     value={project.province}
@@ -148,6 +153,7 @@ export default function AddProjectPage() {
                     }
                     placeholder="Seleccionar provincia"
                     label="Seleccionar Provincia"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -195,13 +201,16 @@ export default function AddProjectPage() {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor={`founder-name-${index}`}>Nombre</Label>
+                        <Label htmlFor={`founder-name-${index}`}>
+                          Nombre <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id={`founder-name-${index}`}
                           value={founder.name}
                           onChange={(e) =>
                             handleFounderChange(index, "name", e.target.value)
                           }
+                          required
                         />
                       </div>
                       <div className="space-y-2">
